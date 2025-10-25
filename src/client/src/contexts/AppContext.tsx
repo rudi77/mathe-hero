@@ -109,8 +109,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const getDifficultyForTopic = (topic: MathTopic): number => {
     if (!userProgress) return 1;
-    
-    const topicMap: Record<MathTopic, keyof UserProgress> = {
+
+    // 'mixed' is handled in MathTask by selecting a random concrete topic
+    // This function should never receive 'mixed' as input
+    const topicMap: Record<Exclude<MathTopic, 'mixed'>, keyof UserProgress> = {
       addition: 'difficultyLevelAddition',
       subtraction: 'difficultyLevelSubtraction',
       multiplication: 'difficultyLevelMultiplication',
@@ -118,14 +120,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       geometry: 'difficultyLevelGeometry',
       sizes: 'difficultyLevelSizes',
     };
-    
-    return userProgress[topicMap[topic]] as number;
+
+    return userProgress[topicMap[topic as Exclude<MathTopic, 'mixed'>]] as number;
   };
 
   const setDifficultyForTopic = async (topic: MathTopic, difficulty: number) => {
     if (!userProgress) return;
-    
-    const topicMap: Record<MathTopic, keyof UserProgress> = {
+
+    // 'mixed' is handled in MathTask by selecting a random concrete topic
+    // This function should never receive 'mixed' as input
+    const topicMap: Record<Exclude<MathTopic, 'mixed'>, keyof UserProgress> = {
       addition: 'difficultyLevelAddition',
       subtraction: 'difficultyLevelSubtraction',
       multiplication: 'difficultyLevelMultiplication',
@@ -133,8 +137,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       geometry: 'difficultyLevelGeometry',
       sizes: 'difficultyLevelSizes',
     };
-    
-    await updateUserProgress({ [topicMap[topic]]: difficulty });
+
+    await updateUserProgress({ [topicMap[topic as Exclude<MathTopic, 'mixed'>]]: difficulty });
   };
 
   return (

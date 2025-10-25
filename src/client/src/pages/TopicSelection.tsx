@@ -45,8 +45,17 @@ export default function TopicSelection() {
           {topics.map((topic) => (
             <Card
               key={topic.id}
-              className="group cursor-pointer overflow-hidden border-4 border-white shadow-lg hover:shadow-2xl transition-all duration-200 hover:scale-105 active:scale-95"
+              className="group cursor-pointer overflow-hidden border-4 border-white shadow-lg hover:shadow-2xl transition-all duration-200 hover:scale-105 active:scale-95 focus-within:ring-4 focus-within:ring-primary focus-within:ring-offset-2"
               onClick={() => handleTopicSelect(topic.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleTopicSelect(topic.id);
+                }
+              }}
+              tabIndex={0}
+              role="button"
+              aria-label={`${topic.name} üben`}
             >
               <div className={`bg-gradient-to-br ${topic.color} p-8 text-white`}>
                 <div className="text-center">
@@ -64,8 +73,17 @@ export default function TopicSelection() {
 
         {/* Mixed Practice Option */}
         <Card
-          className="mt-6 cursor-pointer overflow-hidden border-4 border-white shadow-lg hover:shadow-2xl transition-all duration-200 hover:scale-105 active:scale-95"
-          onClick={() => handleTopicSelect('addition')} // Default to addition for mixed
+          className="mt-6 cursor-pointer overflow-hidden border-4 border-white shadow-lg hover:shadow-2xl transition-all duration-200 hover:scale-105 active:scale-95 focus-within:ring-4 focus-within:ring-primary focus-within:ring-offset-2"
+          onClick={() => handleTopicSelect('mixed')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleTopicSelect('mixed');
+            }
+          }}
+          tabIndex={0}
+          role="button"
+          aria-label="Gemischte Aufgaben - Alle Themen zusammen üben"
         >
           <div className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 p-6 text-white">
             <div className="text-center">

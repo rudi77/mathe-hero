@@ -11,12 +11,28 @@ import { Progress } from '@/components/ui/progress';
 import RewardNotification from '@/components/RewardNotification';
 import { toast } from 'sonner';
 import { db } from '@/lib/db';
+import { motion } from 'framer-motion';
+
+// All possible concrete topics (excluding 'mixed')
+export const ALL_TOPICS: Exclude<MathTopic, 'mixed'>[] = [
+  'addition',
+  'subtraction',
+  'multiplication',
+  'division',
+  'geometry',
+  'sizes',
+];
+
+export function getRandomTopic(): Exclude<MathTopic, 'mixed'> {
+  return ALL_TOPICS[Math.floor(Math.random() * ALL_TOPICS.length)];
+}
 
 export default function MathTask() {
   const [, setLocation] = useLocation();
   const { userProgress, getDifficultyForTopic, setDifficultyForTopic, updateUserProgress, refreshStylingItems, refreshUserProgress } = useApp();
-  
+
   const [topic, setTopic] = useState<MathTopic>('addition');
+  const [currentActualTopic, setCurrentActualTopic] = useState<Exclude<MathTopic, 'mixed'>>('addition'); // Tracks actual topic for mixed mode
   const [currentProblem, setCurrentProblem] = useState<MathProblem | null>(null);
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null);
@@ -64,8 +80,12 @@ export default function MathTask() {
   }, [topic]);
 
   const generateNewProblem = () => {
-    const difficulty = getDifficultyForTopic(topic);
-    const problem = mathEngine.generateProblem(topic, difficulty);
+    // For mixed mode, randomly select a topic
+    const actualTopic = topic === 'mixed' ? getRandomTopic() : topic;
+    setCurrentActualTopic(actualTopic);
+
+    const difficulty = getDifficultyForTopic(actualTopic);
+    const problem = mathEngine.generateProblem(actualTopic, difficulty);
     setCurrentProblem(problem);
     setUserAnswer('');
     setFeedback(null);
@@ -92,7 +112,8 @@ export default function MathTask() {
       const currentCorrect = displayStats.correct;
       const newStreak = currentStreak + 1;
       const newCorrect = currentCorrect + 1;
-      const newDifficulty = mathEngine.adjustDifficulty(getDifficultyForTopic(topic), true);
+      // Use actual topic for difficulty adjustment (important for mixed mode)
+      const newDifficulty = mathEngine.adjustDifficulty(getDifficultyForTopic(currentActualTopic), true);
 
       console.log('[MathTask] Updating from:', { currentStreak, currentCorrect }, 'to:', { newStreak, newCorrect });
 
@@ -114,7 +135,8 @@ export default function MathTask() {
         console.error('[MathTask] Error updating progress:', error);
       }
 
-      await setDifficultyForTopic(topic, newDifficulty);
+      // Update difficulty for the actual topic used (important for mixed mode)
+      await setDifficultyForTopic(currentActualTopic, newDifficulty);
 
       // Check for reward
       const reward = await rewardManager.checkAndUnlockRewards(newStreak);
@@ -136,7 +158,8 @@ export default function MathTask() {
     } else {
       // Read fresh values from DB for incorrect count only
       const freshProgress = await db.getUserProgress();
-      const newDifficulty = mathEngine.adjustDifficulty(getDifficultyForTopic(topic), false);
+      // Use actual topic for difficulty adjustment (important for mixed mode)
+      const newDifficulty = mathEngine.adjustDifficulty(getDifficultyForTopic(currentActualTopic), false);
 
       const currentIncorrect = freshProgress?.totalIncorrectAnswers ?? 0;
       await updateUserProgress({
@@ -150,7 +173,8 @@ export default function MathTask() {
         streak: 0,
       });
 
-      await setDifficultyForTopic(topic, newDifficulty);
+      // Update difficulty for the actual topic used (important for mixed mode)
+      await setDifficultyForTopic(currentActualTopic, newDifficulty);
 
       toast.error('Nicht ganz richtig', {
         description: 'Versuch es nochmal! Du schaffst das! 💪',
@@ -204,14 +228,24 @@ export default function MathTask() {
           </Card>
         </div>
 
-        {/* Problem Card */}
-        <Card className={`p-8 mb-6 transition-all duration-300 border-4 ${
-          feedback === 'correct' 
-            ? 'border-green-400 bg-green-50' 
-            : feedback === 'incorrect' 
-            ? 'border-red-400 bg-red-50' 
-            : 'border-white bg-white'
-        }`}>
+        {/* Problem Card with animations */}
+        <motion.div
+          animate={
+            feedback === 'correct'
+              ? { scale: [1, 1.05, 1], rotate: [0, 2, -2, 0] }
+              : feedback === 'incorrect'
+              ? { x: [0, -10, 10, -10, 10, 0] }
+              : {}
+          }
+          transition={{ duration: 0.5 }}
+        >
+          <Card className={`p-8 mb-6 transition-all duration-300 border-4 ${
+            feedback === 'correct'
+              ? 'border-green-400 bg-green-50 shadow-xl shadow-green-200'
+              : feedback === 'incorrect'
+              ? 'border-red-400 bg-red-50 shadow-xl shadow-red-200'
+              : 'border-white bg-white'
+          }`}>
           <div className="text-center mb-8">
             <h2 className="text-4xl font-bold text-foreground mb-4">
               {currentProblem.question}
@@ -260,7 +294,8 @@ export default function MathTask() {
               ))}
             </div>
           )}
-        </Card>
+          </Card>
+        </motion.div>
 
 
         {/* Stats */}

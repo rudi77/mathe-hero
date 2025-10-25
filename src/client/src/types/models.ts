@@ -23,13 +23,14 @@ export interface UserProgress {
   lastSessionDate: string;
 }
 
-export type MathTopic = 
+export type MathTopic =
   | 'addition'
   | 'subtraction'
   | 'multiplication'
   | 'division'
   | 'geometry'
-  | 'sizes';
+  | 'sizes'
+  | 'mixed';
 
 export interface MathProblem {
   id: string;
