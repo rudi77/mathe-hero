@@ -11,6 +11,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      include: ['client/src/**/*.{ts,tsx}'],
       exclude: [
         'node_modules/',
         'client/src/test/',
@@ -18,6 +19,8 @@ export default defineConfig({
         '**/*.config.*',
         '**/mockData',
         'dist/',
+        'client/src/main.tsx',
+        'client/src/components/ui/**',
       ],
     },
   },
