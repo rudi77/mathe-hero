@@ -15,7 +15,8 @@
       "Bash(timeout 120 pnpm test:coverage)",
       "Bash(NODE_OPTIONS='--max-old-space-size=6144' pnpm vitest run:*)",
       "Bash(NODE_OPTIONS='--max-old-space-size=6144' pnpm test:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(dir /B:*)"
     ],
     "deny": [],
     "ask": []
