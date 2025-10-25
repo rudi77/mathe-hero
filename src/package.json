@@ -10,9 +10,9 @@
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
     "format": "prettier --write .",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test": "cross-env NODE_OPTIONS='--max-old-space-size=4096' vitest",
+    "test:ui": "cross-env NODE_OPTIONS='--max-old-space-size=4096' vitest --ui",
+    "test:coverage": "cross-env NODE_OPTIONS='--max-old-space-size=4096' vitest --coverage"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",
@@ -80,6 +80,7 @@
     "@vitest/coverage-v8": "^4.0.3",
     "add": "^2.0.6",
     "autoprefixer": "^10.4.20",
+    "cross-env": "^10.1.0",
     "esbuild": "^0.25.0",
     "fake-indexeddb": "^6.2.4",
     "jsdom": "^27.0.1",
