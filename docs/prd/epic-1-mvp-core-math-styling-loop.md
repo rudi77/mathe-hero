@@ -100,5 +100,68 @@
 4.  Topic selection integrates with the adaptive difficulty (difficulty adjusts within the selected topic).
 5.  Unit tests verify topic-specific problem generation.
 
+### Story 1.9: Comprehensive Test Suite
+
+**Story:** As a Developer, I want comprehensive automated tests covering all business logic and UI components, so that we can confidently make changes without breaking existing functionality and meet our documented quality standards.
+
+**Acceptance Criteria:**
+
+1.  Unit test coverage for mathEngine.ts is >90% (all methods, edge cases, difficulty scaling).
+2.  Unit test coverage for rewardManager.ts is >90% (unlock logic, thresholds, edge cases).
+3.  Unit test coverage for db.ts is >80% (all CRUD operations, error handling).
+4.  Component tests exist for all major React components using React Testing Library:
+    - CharacterDisplay (item rendering, background changes)
+    - ItemPalette (locked/unlocked display, selection)
+    - MathTask (problem display, answer checking, feedback)
+    - Styling (item application, character state updates)
+    - TopicSelection (topic selection, navigation)
+5.  Overall project test coverage reaches >70% as measured by Vitest coverage reports.
+6.  All tests pass with `pnpm test`.
+7.  Test data fixtures/factories are created for reusable test objects.
+8.  Testing patterns and examples are documented in coding-standards.md.
+
+### Story 1.10: CI/CD Pipeline & Coverage Reporting
+
+**Story:** As a Developer, I want automated testing and coverage reporting on every code change, so that quality is enforced and visible to the team.
+
+**Acceptance Criteria:**
+
+1.  GitHub Actions workflow configured to run tests on every push/PR.
+2.  Workflow fails if tests don't pass (blocking merge).
+3.  Coverage reports generated and displayed in PR comments or checks.
+4.  Coverage badge added to README showing current coverage percentage.
+5.  Pre-commit hooks configured to run tests locally before commits (optional but recommended).
+6.  Documentation updated with instructions for running tests locally (README or contributing guide).
+7.  Test watch mode works correctly during local development (`pnpm test` or `pnpm test:watch`).
+
+### Story 1.11: Child-Friendly UX Polish
+
+**Story:** As a Child User, I want a more visually appealing character and helpful error messages, so that the app feels professional, welcoming, and supportive when things go wrong.
+
+**Acceptance Criteria:**
+
+1.  Custom SVG character head design created (or sourced from child-appropriate assets) to replace emoji-based placeholder.
+2.  Character head rendered using the new custom artwork in CharacterDisplay component.
+3.  Error messages rewritten in child-friendly language (tested with age-appropriate readability - simple sentences, encouraging tone).
+4.  ErrorBoundary displays age-appropriate "Oops! Something went wrong" message instead of technical error details.
+5.  "Gemischte Aufgaben" (Mixed Tasks) feature fully implemented to randomize across all topics, not defaulting to addition.
+6.  Visual polish pass: consistent spacing, colors, smooth animations for correct/incorrect feedback.
+7.  Basic accessibility improvements: keyboard navigation for topic selection and entering math answers (Tab, Enter).
+8.  User-facing text reviewed for child-appropriate tone and clarity (no technical jargon).
+
+---
+
+## Epic Completion Criteria
+
+Epic 1 will be considered complete when:
+
+- ✅ All functional stories (1.1-1.8) implemented and working
+- ⬜ Comprehensive test suite with >70% overall coverage (Story 1.9)
+- ⬜ CI/CD pipeline operational and enforcing quality (Story 1.10)
+- ⬜ Child-friendly UX polish completed (Story 1.11)
+- ⬜ QA gate review passed (all stories reviewed and approved by QA)
+- ⬜ All story files documented in docs/stories/
+- ⬜ Ready for user acceptance testing with target age group (ages 8-9)
+
 ---
 
