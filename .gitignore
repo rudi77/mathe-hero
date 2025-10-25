@@ -277,4 +277,4 @@ vite.config.*.timestamp-*
 !.yarn/sdks
 !.yarn/versions
 .pnp.*
-.yarn/install-state.gz
+.yarn/install-state.gz.husky/_

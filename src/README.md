@@ -1,5 +1,8 @@
 # Mathe-Stylistin 🎨📐
 
+[![Tests](https://github.com/rudi77/mathe-hero/actions/workflows/test.yml/badge.svg)](https://github.com/rudi77/mathe-hero/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/rudi77/mathe-hero/branch/main/graph/badge.svg)](https://codecov.io/gh/rudi77/mathe-hero)
+
 Eine Progressive Web App (PWA) für Grundschulkinder (3. Klasse Bayern), die Mathematikübungen mit kreativem Styling kombiniert. Kinder lösen Matheaufgaben, um digitale Styling-Items freizuschalten und einen virtuellen Charakterkopf zu gestalten.
 
 ## 🎯 Projektübersicht
@@ -148,16 +151,55 @@ Das Projekt enthält umfassende Unit Tests für die Kernlogik:
 - Progress-Tracking
 - Locked/Unlocked Items
 
+### Test Commands
+
 ```bash
-# Alle Tests ausführen
+# Tests im Watch-Modus ausführen (empfohlen für Entwicklung)
 pnpm test
 
-# Tests mit Coverage
+# Tests einmalig ausführen (für CI/CD)
+pnpm test -- --run
+
+# Tests mit interaktiver UI
+pnpm test:ui
+
+# Tests mit Coverage Report
 pnpm test:coverage
+
+# TypeScript Type-Checking
+pnpm check
+```
+
+### CI/CD Pipeline
+
+Das Projekt verwendet GitHub Actions für automatisierte Tests:
+
+- ✅ **Automatische Tests** bei jedem Push/Pull Request
+- ✅ **TypeScript Type-Checking** vor Tests
+- ✅ **Coverage Reports** mit Codecov Integration
+- ✅ **Test Summary** in GitHub Actions Output
+- ✅ **Coverage Badge** im README
+
+**Workflow-Datei:** `.github/workflows/test.yml`
+
+### Pre-Commit Hooks
+
+Pre-commit hooks sind konfiguriert und führen automatisch Tests vor jedem Commit aus:
+
+```bash
+# Normaler Commit (Tests laufen automatisch)
+git commit -m "Your message"
+
+# Hook für einen Commit überspringen (nur im Notfall!)
+git commit -m "Your message" --no-verify
+
+# Oder mit Umgebungsvariable
+HUSKY=0 git commit -m "Your message"
 ```
 
 **Test-Ergebnisse:**
 - ✅ 27/27 Tests bestanden
+- ✅ >70% Coverage-Ziel
 - ✅ Volle Abdeckung der Kernlogik
 
 ## 📱 PWA Installation

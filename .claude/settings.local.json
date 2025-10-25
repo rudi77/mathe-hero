@@ -16,7 +16,14 @@
       "Bash(NODE_OPTIONS='--max-old-space-size=6144' pnpm vitest run:*)",
       "Bash(NODE_OPTIONS='--max-old-space-size=6144' pnpm test:*)",
       "Bash(cat:*)",
-      "Bash(dir /B:*)"
+      "Bash(dir /B:*)",
+      "Bash(mkdir:*)",
+      "Bash(python3:*)",
+      "Bash(node -e:*)",
+      "Bash(pnpm list:*)",
+      "Bash(pnpm exec husky:*)",
+      "Bash(node_modules/.bin/husky:*)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": []
