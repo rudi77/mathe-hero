@@ -23,7 +23,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [characterState, setCharacterState] = useState<CharacterState>({ appliedItems: [] });
   const [isLoading, setIsLoading] = useState(true);
-  const [updateTrigger, setUpdateTrigger] = useState(0);
 
   useEffect(() => {
     initializeApp();
@@ -78,25 +77,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const updateUserProgress = async (updates: Partial<UserProgress>) => {
     console.log('[AppContext] updateUserProgress called with:', updates);
-    
+
     // If userProgress is null, load it first or use initial values
     const currentProgress = userProgress || initialUserProgress;
     console.log('[AppContext] currentProgress:', currentProgress);
-    
-    const updatedProgress = { ...currentProgress, ...updates };
+
+    const updatedProgress = { ...currentProgress, ...updates, id: 1 };
     console.log('[AppContext] updatedProgress BEFORE save:', updatedProgress);
-    
+
     await db.saveUserProgress(updatedProgress);
     console.log('[AppContext] DB save completed');
-    
-    // Force new object reference to trigger React re-render
-    setUserProgress({ ...updatedProgress });
-    console.log('[AppContext] setUserProgress called');
-    
-    // Trigger re-render
-    setUpdateTrigger(prev => prev + 1);
-    
-    console.log('[AppContext] User progress updated:', updatedProgress, 'trigger:', updateTrigger + 1);
+
+    // Read back from DB to ensure consistency
+    const savedProgress = await db.getUserProgress();
+    console.log('[AppContext] Progress read back from DB:', savedProgress);
+
+    if (savedProgress) {
+      // Create completely new object reference to ensure React detects change
+      const newProgressRef = JSON.parse(JSON.stringify(savedProgress));
+      setUserProgress(newProgressRef);
+      console.log('[AppContext] setUserProgress called with NEW reference:', newProgressRef);
+    }
+
+    console.log('[AppContext] User progress updated successfully');
   };
 
   const updateCharacterState = async (state: CharacterState) => {

@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import RewardNotification from '@/components/RewardNotification';
 import { toast } from 'sonner';
+import { db } from '@/lib/db';
 
 export default function MathTask() {
   const [, setLocation] = useLocation();
@@ -22,7 +23,30 @@ export default function MathTask() {
   const [showReward, setShowReward] = useState(false);
   const [unlockedItem, setUnlockedItem] = useState<StylingItem | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<string>('');
+  const [displayStats, setDisplayStats] = useState({ correct: 0, streak: 0 });
+
+  // DISABLED: This useEffect was overwriting manual updates!
+  // Update display stats whenever userProgress changes
+  // useEffect(() => {
+  //   if (userProgress) {
+  //     console.log('[MathTask] userProgress changed, updating display:', userProgress);
+  //     setDisplayStats({
+  //       correct: userProgress.totalCorrectAnswers,
+  //       streak: userProgress.correctAnswersStreak,
+  //     });
+  //   }
+  // }, [userProgress]);
+
+  // Initialize displayStats on mount from userProgress
+  useEffect(() => {
+    if (userProgress && displayStats.correct === 0 && displayStats.streak === 0) {
+      console.log('[MathTask] INITIAL load - setting displayStats from userProgress:', userProgress);
+      setDisplayStats({
+        correct: userProgress.totalCorrectAnswers,
+        streak: userProgress.correctAnswersStreak,
+      });
+    }
+  }, [userProgress]); // Only runs once on initial load when both are 0
 
   useEffect(() => {
     // Get topic from URL
@@ -50,7 +74,7 @@ export default function MathTask() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('[MathTask] handleSubmit called', { currentProblem, isSubmitting, userAnswer, userProgress });
-    
+
     if (!currentProblem || isSubmitting) {
       console.log('[MathTask] Submit blocked:', { hasCurrentProblem: !!currentProblem, isSubmitting });
       return;
@@ -63,29 +87,34 @@ export default function MathTask() {
     setFeedback(isCorrect ? 'correct' : 'incorrect');
 
     if (isCorrect) {
-      // Update progress
-      const currentStreak = userProgress?.correctAnswersStreak || 0;
-      const currentCorrect = userProgress?.totalCorrectAnswers || 0;
+      // Use displayStats as source of truth (it's always current)
+      const currentStreak = displayStats.streak;
+      const currentCorrect = displayStats.correct;
       const newStreak = currentStreak + 1;
       const newCorrect = currentCorrect + 1;
       const newDifficulty = mathEngine.adjustDifficulty(getDifficultyForTopic(topic), true);
-      
-      setDebugInfo(`BEFORE update: correct=${currentCorrect}, streak=${currentStreak}`);
-      
+
+      console.log('[MathTask] Updating from:', { currentStreak, currentCorrect }, 'to:', { newStreak, newCorrect });
+
       try {
+        console.log('[MathTask] Updating progress...');
         await updateUserProgress({
           correctAnswersStreak: newStreak,
           totalCorrectAnswers: newCorrect,
         });
-        setDebugInfo(`AFTER update: newCorrect=${newCorrect}, newStreak=${newStreak}`);
+
+        // Update displayStats immediately for UI
+        setDisplayStats({
+          correct: newCorrect,
+          streak: newStreak,
+        });
+
+        console.log('[MathTask] Progress updated:', { newCorrect, newStreak });
       } catch (error) {
-        setDebugInfo(`ERROR: ${error}`);
+        console.error('[MathTask] Error updating progress:', error);
       }
-      
+
       await setDifficultyForTopic(topic, newDifficulty);
-      
-      // Force refresh to ensure UI updates
-      await refreshUserProgress();
 
       // Check for reward
       const reward = await rewardManager.checkAndUnlockRewards(newStreak);
@@ -96,7 +125,7 @@ export default function MathTask() {
       }
 
       toast.success('Richtig! 🎉', {
-        description: `Super gemacht! ${newStreak} richtige Antworten in Folge. DEBUG: currentCorrect=${currentCorrect}, newCorrect=${newCorrect}, userProgress.totalCorrectAnswers=${userProgress?.totalCorrectAnswers}`,
+        description: `Super gemacht! ${newStreak} richtige Antworten in Folge!`,
       });
 
       // Generate next problem after delay
@@ -105,19 +134,23 @@ export default function MathTask() {
         setIsSubmitting(false);
       }, 1500);
     } else {
-      // Update progress
+      // Read fresh values from DB for incorrect count only
+      const freshProgress = await db.getUserProgress();
       const newDifficulty = mathEngine.adjustDifficulty(getDifficultyForTopic(topic), false);
-      
-      const currentIncorrect = userProgress?.totalIncorrectAnswers || 0;
+
+      const currentIncorrect = freshProgress?.totalIncorrectAnswers ?? 0;
       await updateUserProgress({
         correctAnswersStreak: 0,
         totalIncorrectAnswers: currentIncorrect + 1,
       });
-      
+
+      // Reset streak, keep correct count
+      setDisplayStats({
+        correct: displayStats.correct,
+        streak: 0,
+      });
+
       await setDifficultyForTopic(topic, newDifficulty);
-      
-      // Force refresh to ensure UI updates
-      await refreshUserProgress();
 
       toast.error('Nicht ganz richtig', {
         description: 'Versuch es nochmal! Du schaffst das! 💪',
@@ -131,14 +164,16 @@ export default function MathTask() {
     setUserAnswer(String(option));
   };
 
-  // Force component to use latest userProgress values
-  const currentStreak = userProgress?.correctAnswersStreak || 0;
-  const currentCorrect = userProgress?.totalCorrectAnswers || 0;
-  const progressToNextUnlock = rewardManager.getProgressToNextUnlock(currentStreak);
+  // Use display stats from state
+  const progressToNextUnlock = rewardManager.getProgressToNextUnlock(displayStats.streak);
   const unlockThreshold = rewardManager.getUnlockThreshold();
   const progressPercentage = (progressToNextUnlock / unlockThreshold) * 100;
-  
-  console.log('[MathTask] Render with stats:', { currentCorrect, currentStreak, userProgress });
+
+  console.log('[MathTask] Render with stats:', {
+    displayCorrect: displayStats.correct,
+    displayStreak: displayStats.streak,
+    userProgress,
+  });
 
   if (!currentProblem) {
     return <div className="min-h-screen flex items-center justify-center">Lädt...</div>;
@@ -227,27 +262,18 @@ export default function MathTask() {
           )}
         </Card>
 
-        {/* Debug Info */}
-        <Card className="p-4 mb-4 bg-yellow-100">
-          <div className="text-xs font-mono">
-            <div>userProgress: {JSON.stringify(userProgress)}</div>
-            <div>currentCorrect: {currentCorrect}</div>
-            <div>currentStreak: {currentStreak}</div>
-            <div className="mt-2 font-bold text-red-600">{debugInfo}</div>
-          </div>
-        </Card>
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4">
           <Card className="p-4 text-center bg-white/80 backdrop-blur">
             <div className="text-3xl font-bold text-green-600">
-              {currentCorrect}
+              {displayStats.correct}
             </div>
             <div className="text-sm text-muted-foreground">Richtig</div>
           </Card>
           <Card className="p-4 text-center bg-white/80 backdrop-blur">
             <div className="text-3xl font-bold text-primary">
-              {currentStreak}
+              {displayStats.streak}
             </div>
             <div className="text-sm text-muted-foreground">Serie</div>
           </Card>
