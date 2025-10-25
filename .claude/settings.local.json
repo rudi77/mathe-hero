@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(md-tree explode docs/prd.md docs/prd)",
+      "Bash(md-tree explode docs/architecture.md docs/architecture)",
+      "Bash(md-tree explode docs/front-end-spec.md docs/front-end-spec)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

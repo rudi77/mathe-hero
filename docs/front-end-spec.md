@@ -1,6 +1,3 @@
-Okay, here is the complete content for the `front-end-spec.md` file:
-
-````markdown
 # Mathe-Stylistin UI/UX Specification
 
 ## Introduction
@@ -404,5 +401,3 @@ graph TD
 
 <!-- end list -->
 
-```
-```
