@@ -23,7 +23,8 @@
       "Bash(pnpm list:*)",
       "Bash(pnpm exec husky:*)",
       "Bash(node_modules/.bin/husky:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(pnpm check:*)"
     ],
     "deny": [],
     "ask": []
