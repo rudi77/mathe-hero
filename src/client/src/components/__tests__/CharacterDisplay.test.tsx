@@ -1,3 +1,55 @@
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import CharacterDisplay from '@/components/CharacterDisplay';
+import type { AppliedStyling, StylingItem } from '@/types/models';
+
+describe('CharacterDisplay', () => {
+  const items: StylingItem[] = [
+    {
+      id: 'accessory-glasses-1',
+      type: 'accessory',
+      name: 'Coole Brille',
+      assetReference: '🕶️',
+      isUnlocked: true,
+      category: 'accessories',
+      defaultPosition: { x: 50, y: 35 },
+      size: 'medium',
+    },
+    {
+      id: 'accessory-bow',
+      type: 'accessory',
+      name: 'Schleife',
+      assetReference: '🎀',
+      isUnlocked: true,
+      category: 'accessories',
+      defaultPosition: { x: 30, y: 15 },
+      size: 'small',
+    },
+  ];
+
+  it('renders applied items with size classes and positions', () => {
+    const applied: AppliedStyling[] = [
+      { itemId: 'accessory-glasses-1', position: { x: 50, y: 35 } },
+      { itemId: 'accessory-bow', position: { x: 30, y: 15 } },
+    ];
+
+    render(
+      <CharacterDisplay appliedItems={applied} allItems={items} backgroundColor="#fff" />
+    );
+
+    const sunglasses = screen.getAllByText('🕶️')[0] as HTMLElement;
+    const bow = screen.getAllByText('🎀')[0] as HTMLElement;
+
+    expect(sunglasses.className).toMatch(/text-5xl/);
+    expect(bow.className).toMatch(/text-4xl/);
+
+    expect((sunglasses as HTMLElement).style.top).toBe('35%');
+    expect((sunglasses as HTMLElement).style.left).toBe('50%');
+    expect((bow as HTMLElement).style.top).toBe('15%');
+    expect((bow as HTMLElement).style.left).toBe('30%');
+  });
+});
+
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
 import CharacterDisplay from '../CharacterDisplay';

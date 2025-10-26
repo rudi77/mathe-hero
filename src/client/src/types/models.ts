@@ -7,6 +7,10 @@ export interface StylingItem {
   assetReference: string;
   isUnlocked: boolean;
   category?: string;
+  // Default placement relative to character head in percent (0-100)
+  defaultPosition?: { x: number; y: number };
+  // Rendering size hint used by display component
+  size?: 'small' | 'medium' | 'large';
 }
 
 export interface UserProgress {

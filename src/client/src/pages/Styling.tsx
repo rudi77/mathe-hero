@@ -33,16 +33,12 @@ export default function Styling() {
     }
   };
 
-  const handleCharacterClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleCharacterClickPosition = (pos: { x: number; y: number }) => {
     if (!selectedItem || selectedItem.type === 'color') return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
 
     const newAppliedItem: AppliedStyling = {
       itemId: selectedItem.id,
-      position: { x, y },
+      position: pos,
       scale: 1,
       rotation: 0,
     };
@@ -101,14 +97,13 @@ export default function Styling() {
                 </Button>
               </div>
               
-              <div 
-                onClick={handleCharacterClick}
-                className={selectedItem && selectedItem.type !== 'color' ? 'cursor-crosshair' : ''}
-              >
+              <div>
                 <CharacterDisplay
                   appliedItems={characterState.appliedItems}
                   allItems={stylingItems}
                   backgroundColor={backgroundColor}
+                  onClickPosition={handleCharacterClickPosition}
+                  isClickable={!!selectedItem && selectedItem.type !== 'color'}
                 />
               </div>
 
