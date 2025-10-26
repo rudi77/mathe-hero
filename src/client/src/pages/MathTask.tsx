@@ -91,9 +91,10 @@ export default function MathTask() {
     setFeedback(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, submittedAnswer?: string) => {
     e.preventDefault();
-    console.log('[MathTask] handleSubmit called', { currentProblem, isSubmitting, userAnswer, userProgress });
+    const answerToCheck = submittedAnswer ?? userAnswer;
+    console.log('[MathTask] handleSubmit called', { currentProblem, isSubmitting, answerToCheck, userProgress });
 
     if (!currentProblem || isSubmitting) {
       console.log('[MathTask] Submit blocked:', { hasCurrentProblem: !!currentProblem, isSubmitting });
@@ -102,8 +103,8 @@ export default function MathTask() {
 
     setIsSubmitting(true);
 
-    const isCorrect = mathEngine.checkAnswer(currentProblem, userAnswer);
-    console.log('[MathTask] Answer checked:', { isCorrect, userAnswer, correctAnswer: currentProblem.correctAnswer });
+    const isCorrect = mathEngine.checkAnswer(currentProblem, answerToCheck);
+    console.log('[MathTask] Answer checked:', { isCorrect, answerToCheck, correctAnswer: currentProblem.correctAnswer });
     setFeedback(isCorrect ? 'correct' : 'incorrect');
 
     if (isCorrect) {
@@ -279,9 +280,11 @@ export default function MathTask() {
                 <Button
                   key={index}
                   onClick={() => {
+                    const optionStr = String(option);
                     handleOptionSelect(option);
+                    // Pass the selected answer directly to avoid state race condition
                     setTimeout(() => {
-                      handleSubmit({ preventDefault: () => {} } as React.FormEvent);
+                      handleSubmit({ preventDefault: () => {} } as React.FormEvent, optionStr);
                     }, 100);
                   }}
                   size="lg"
