@@ -220,4 +220,32 @@ describe('MathTask', () => {
 
     vi.useRealTimers();
   });
+
+  it('should navigate to Styling page when reward modal is closed', async () => {
+    const mockReward = createStylingItem({ id: 'reward-1', name: 'Test Reward' });
+    vi.spyOn(rewardManager, 'checkAndUnlockRewards').mockResolvedValue(mockReward);
+
+    const { findByPlaceholderText, findByText } = render(<MathTask />);
+
+    const input = await findByPlaceholderText('Deine Antwort...');
+    const submitButton = await findByText('Antwort prüfen ✓');
+
+    // Submit correct answer to unlock reward
+    fireEvent.change(input, { target: { value: '8' } });
+    fireEvent.click(submitButton);
+
+    // Wait for reward notification to appear
+    await waitFor(() => {
+      expect(screen.getByText('🎉 Glückwunsch! 🎉')).toBeInTheDocument();
+    });
+
+    // Close the reward notification
+    const closeButton = screen.getByText('Super! 🎨');
+    fireEvent.click(closeButton);
+
+    // Verify navigation to Styling page
+    await waitFor(() => {
+      expect(mockSetLocation).toHaveBeenCalledWith('/');
+    });
+  });
 });

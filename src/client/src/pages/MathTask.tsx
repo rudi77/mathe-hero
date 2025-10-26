@@ -319,7 +319,10 @@ export default function MathTask() {
       <RewardNotification
         isOpen={showReward}
         item={unlockedItem}
-        onClose={() => setShowReward(false)}
+        onClose={() => {
+          setShowReward(false);
+          setLocation('/');
+        }}
       />
     </div>
   );
