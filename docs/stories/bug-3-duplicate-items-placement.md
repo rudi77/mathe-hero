@@ -2,7 +2,7 @@
 
 ## Status
 
-**Todo**
+**Ready for Review**
 
 ## User Story
 
@@ -228,4 +228,33 @@ const handleCharacterClick = (e: React.MouseEvent<HTMLDivElement>) => {
 **Created:** 2025-10-26
 **By:** PM John
 **Epic:** Epic 1 - MVP Core (Bug Fix)
+
+## Dev Agent Record
+
+- Agent Model Used: dev (James)
+
+### Tasks / Subtasks Checkboxes
+- [x] Update `Styling.tsx` to prevent duplicates and update position
+- [x] Add unit test verifying single-instance and position update
+- [x] Run lints and tests; resolve issues
+- [x] Update story records and file list
+
+### Debug Log References
+- Confirmed test execution with single worker to avoid OOM during CI runs.
+
+### Completion Notes
+- Implemented functional approach: filter existing `itemId` then append new placement.
+- Preserved immutability and integration with `updateCharacterState`.
+- Verified behavior with new focused test.
+
+### File List
+- Modified: `src/client/src/pages/Styling.tsx`
+- Added: `src/client/src/pages/__tests__/Styling.duplicate.test.tsx`
+
+### Change Log
+- Updated placement logic in `handleCharacterClickPosition` to replace existing item instead of duplicating.
+- Added unit test to ensure only one instance exists and position updates on subsequent clicks.
+
+### Status
+Ready for Review
 

@@ -43,8 +43,14 @@ export default function Styling() {
       rotation: 0,
     };
 
+    // Prevent duplicates: replace existing item with same id, or add if not present
+    const updatedItems = [
+      ...characterState.appliedItems.filter((item) => item.itemId !== selectedItem.id),
+      newAppliedItem,
+    ];
+
     updateCharacterState({
-      appliedItems: [...characterState.appliedItems, newAppliedItem],
+      appliedItems: updatedItems,
     });
   };
 
