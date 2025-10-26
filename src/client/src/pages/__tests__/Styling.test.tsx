@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import Styling from '../Styling';
 import { createUserProgress, createInitialTestItems, createCharacterState } from '@/test/fixtures';
@@ -8,16 +8,32 @@ vi.mock('wouter', () => ({
   useLocation: () => ['/', vi.fn()],
 }));
 
+// Create mock function outside to access in tests
+const mockRefreshUserProgress = vi.fn();
+
 vi.mock('@/contexts/AppContext', () => ({
   useApp: () => ({
     stylingItems: createInitialTestItems(),
     userProgress: createUserProgress(),
     characterState: createCharacterState(),
     updateCharacterState: vi.fn(),
+    refreshUserProgress: mockRefreshUserProgress,
+    isLoading: false, // DB is initialized
   }),
 }));
 
 describe('Styling', () => {
+  beforeEach(() => {
+    // Clear mock calls between tests
+    mockRefreshUserProgress.mockClear();
+  });
+
+  it('should call refreshUserProgress on mount', () => {
+    render(<Styling />);
+
+    expect(mockRefreshUserProgress).toHaveBeenCalledTimes(1);
+  });
+
   it('should render page title', () => {
     render(<Styling />);
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { useApp } from '@/contexts/AppContext';
 import CharacterDisplay from '@/components/CharacterDisplay';
@@ -9,11 +9,20 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Styling() {
-  const [, setLocation] = useLocation();
-  const { stylingItems, characterState, updateCharacterState, userProgress } = useApp();
+  const [location, setLocation] = useLocation();
+  const { stylingItems, characterState, updateCharacterState, userProgress, refreshUserProgress, isLoading } = useApp();
   
   const [selectedItem, setSelectedItem] = useState<StylingItem | null>(null);
   const [backgroundColor, setBackgroundColor] = useState('#FFE4E1');
+
+  // Refresh user progress whenever we navigate to this page
+  // Location change triggers this effect, ensuring fresh data after returning from MathTask
+  useEffect(() => {
+    if (!isLoading && location === '/') {
+      refreshUserProgress();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location, isLoading]); // refreshUserProgress is stable, but not included to avoid infinite loops
 
   const handleItemSelect = (item: StylingItem) => {
     setSelectedItem(item);

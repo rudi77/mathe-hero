@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import type { StylingItem, UserProgress, CharacterState, MathTopic } from '@/types/models';
 import { db } from '@/lib/db';
 import { initialStylingItems, initialUserProgress } from '@/lib/initialData';
@@ -63,43 +63,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const refreshStylingItems = async () => {
+  const refreshStylingItems = useCallback(async () => {
     const items = await db.getAllStylingItems();
     setStylingItems(items);
-  };
+  }, []);
 
-  const refreshUserProgress = async () => {
+  const refreshUserProgress = useCallback(async () => {
     const progress = await db.getUserProgress();
     if (progress) {
-      setUserProgress(progress);
+      // Create new object reference to ensure React detects change
+      const newProgressRef = JSON.parse(JSON.stringify(progress));
+      setUserProgress(newProgressRef);
     }
-  };
+  }, []);
 
   const updateUserProgress = async (updates: Partial<UserProgress>) => {
-    console.log('[AppContext] updateUserProgress called with:', updates);
+    // Always merge against the LATEST persisted progress to avoid overwriting
+    // fields with stale values when multiple updates happen back-to-back
+    // (e.g., counters update followed by difficulty update).
+    const persisted = await db.getUserProgress();
+    const base = persisted ?? userProgress ?? initialUserProgress;
 
-    // If userProgress is null, load it first or use initial values
-    const currentProgress = userProgress || initialUserProgress;
-    console.log('[AppContext] currentProgress:', currentProgress);
+    // Ensure all fields always exist by layering initial defaults first
+    const currentProgress: UserProgress = { ...initialUserProgress, ...base } as UserProgress;
 
-    const updatedProgress = { ...currentProgress, ...updates, id: 1 };
-    console.log('[AppContext] updatedProgress BEFORE save:', updatedProgress);
+    const updatedProgress: UserProgress = { ...currentProgress, ...updates, id: 1 } as UserProgress;
 
     await db.saveUserProgress(updatedProgress);
-    console.log('[AppContext] DB save completed');
 
-    // Read back from DB to ensure consistency
+    // Read back from DB to ensure consistency and to get the transaction's final state
     const savedProgress = await db.getUserProgress();
-    console.log('[AppContext] Progress read back from DB:', savedProgress);
 
     if (savedProgress) {
       // Create completely new object reference to ensure React detects change
       const newProgressRef = JSON.parse(JSON.stringify(savedProgress));
       setUserProgress(newProgressRef);
-      console.log('[AppContext] setUserProgress called with NEW reference:', newProgressRef);
     }
-
-    console.log('[AppContext] User progress updated successfully');
   };
 
   const updateCharacterState = async (state: CharacterState) => {
