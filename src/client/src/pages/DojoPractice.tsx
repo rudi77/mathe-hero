@@ -13,7 +13,9 @@ import { motion } from 'framer-motion';
 // and does not persist any progress to the database.
 
 export default function DojoPractice() {
+  console.log('[DojoPractice] Component mounted');
   const [location, setLocation] = useLocation();
+  console.log('[DojoPractice] Location:', location);
 
   // Problem state
   const [currentProblem, setCurrentProblem] = useState<MathProblem | null>(null);
@@ -27,32 +29,73 @@ export default function DojoPractice() {
   // Processing state
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Extract subtopic from query params
-  const params = new URLSearchParams(location.split('?')[1]);
+  // Extract subtopic from query params - use window.location for query params
+  const params = new URLSearchParams(window.location.search);
   const subtopicId = params.get('subtopic');
+  console.log('[DojoPractice] Parsed subtopicId:', subtopicId);
 
   // Look up subtopic definition
   const subtopic = subtopicId ? getSubtopicById(subtopicId) : undefined;
+  console.log('[DojoPractice] Found subtopic:', subtopic);
 
   // MathEngine instance
   const mathEngine = new MathEngine();
 
   // Generate new problem when component mounts or subtopic changes
   useEffect(() => {
+    console.log('[DojoPractice] useEffect triggered', { subtopic, subtopicId });
     if (subtopic) {
       generateNewProblem();
     }
   }, [subtopic]);
 
   const generateNewProblem = () => {
-    if (!subtopic) return;
+    console.log('[DojoPractice] generateNewProblem called', { subtopic });
+    if (!subtopic) {
+      console.log('[DojoPractice] No subtopic, returning');
+      return;
+    }
 
-    // Calculate random difficulty within subtopic's range
-    const { difficultyMin = 1, difficultyMax = 10 } = subtopic.mathEngineParams;
+    const { difficultyMin = 1, difficultyMax = 10, constraints } = subtopic.mathEngineParams;
     const difficulty = Math.random() * (difficultyMax - difficultyMin) + difficultyMin;
 
-    // Generate problem using MathEngine
-    const problem = mathEngine.generateProblem(subtopic.topicId, difficulty);
+    let problem: MathProblem;
+
+    // For addition/subtraction with maxNumber constraint, generate directly
+    if (constraints?.maxNumber && (subtopic.topicId === 'addition' || subtopic.topicId === 'subtraction')) {
+      const maxNumber = constraints.maxNumber;
+
+      if (subtopic.topicId === 'addition') {
+        // Generate addition within limits
+        const a = Math.floor(Math.random() * maxNumber) + 1;
+        const b = Math.floor(Math.random() * (maxNumber - a)) + 1; // Ensure sum <= maxNumber
+        problem = {
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          topic: 'addition',
+          question: `${a} + ${b} = ?`,
+          correctAnswer: a + b,
+          difficulty,
+          type: 'calculation',
+        };
+      } else {
+        // Generate subtraction within limits
+        const a = Math.floor(Math.random() * maxNumber) + 1;
+        const b = Math.floor(Math.random() * a) + 1; // Ensure positive result
+        problem = {
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          topic: 'subtraction',
+          question: `${a} - ${b} = ?`,
+          correctAnswer: a - b,
+          difficulty,
+          type: 'calculation',
+        };
+      }
+    } else {
+      // Use MathEngine for other topics
+      problem = mathEngine.generateProblem(subtopic.topicId, difficulty);
+    }
+
+    console.log('[DojoPractice] Problem generated', { problem });
 
     setCurrentProblem(problem);
     setUserAnswer('');
@@ -140,12 +183,25 @@ export default function DojoPractice() {
   };
 
   // Show loading state if no subtopic or problem
-  if (!subtopic || !currentProblem) {
+  if (!subtopic) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-100 via-yellow-100 to-red-100 flex items-center justify-center">
         <div className="text-center">
           <div className="text-4xl mb-4">⏳</div>
-          <p className="text-lg text-muted-foreground">Lädt...</p>
+          <p className="text-lg text-muted-foreground">Lädt Subtopic...</p>
+          <p className="text-sm mt-4">SubtopicId: {subtopicId || 'none'}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentProblem) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-100 via-yellow-100 to-red-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">⏳</div>
+          <p className="text-lg text-muted-foreground">Generiere Aufgabe...</p>
+          <p className="text-sm mt-4">Subtopic: {subtopic.name}</p>
         </div>
       </div>
     );
