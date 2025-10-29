@@ -26,7 +26,10 @@
       "Bash(chmod:*)",
       "Bash(pnpm check:*)",
       "Bash(timeout 30 pnpm test:*)",
-      "Bash(pnpm dev)"
+      "Bash(pnpm dev)",
+      "Bash(dir:*)",
+      "Bash(pnpm exec eslint:*)",
+      "Bash(pnpm build:*)"
     ],
     "deny": [],
     "ask": []
