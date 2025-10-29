@@ -25,7 +25,8 @@
       "Bash(node_modules/.bin/husky:*)",
       "Bash(chmod:*)",
       "Bash(pnpm check:*)",
-      "Bash(timeout 30 pnpm test:*)"
+      "Bash(timeout 30 pnpm test:*)",
+      "Bash(pnpm dev)"
     ],
     "deny": [],
     "ask": []

@@ -75,13 +75,23 @@ export default function Styling() {
                 {unlockedCount} von {totalItems} Items freigeschaltet
               </p>
             </div>
-            <Button
-              onClick={() => setLocation('/topics')}
-              size="lg"
-              className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-lg font-bold shadow-lg"
-            >
-              Mathe üben 🎓
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setLocation('/dojo')}
+                size="lg"
+                variant="outline"
+                className="text-lg font-bold shadow-lg"
+              >
+                Trainings-Dojo 🥋
+              </Button>
+              <Button
+                onClick={() => setLocation('/topics')}
+                size="lg"
+                className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-lg font-bold shadow-lg"
+              >
+                Mathe üben 🎓
+              </Button>
+            </div>
           </div>
         </div>
       </div>

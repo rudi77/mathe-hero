@@ -46,6 +46,12 @@ describe('Styling', () => {
     expect(screen.getByText(/Mathe üben/)).toBeInTheDocument();
   });
 
+  it('should render Trainings-Dojo button', () => {
+    render(<Styling />);
+
+    expect(screen.getByText(/Trainings-Dojo/)).toBeInTheDocument();
+  });
+
   it('should render character display section', () => {
     render(<Styling />);
 

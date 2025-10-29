@@ -8,6 +8,8 @@ import { AppProvider } from "./contexts/AppContext";
 import Styling from "./pages/Styling";
 import TopicSelection from "./pages/TopicSelection";
 import MathTask from "./pages/MathTask";
+import DojoTopicSelection from "./pages/DojoTopicSelection";
+import DojoPractice from "./pages/DojoPractice";
 
 function Router() {
   return (
@@ -15,6 +17,8 @@ function Router() {
       <Route path={"/"} component={Styling} />
       <Route path="/topics" component={TopicSelection} />
       <Route path="/math" component={MathTask} />
+      <Route path="/dojo" component={DojoTopicSelection} />
+      <Route path="/dojo/practice" component={DojoPractice} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
