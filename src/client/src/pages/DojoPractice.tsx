@@ -2,15 +2,20 @@ import React from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { getSubtopicById } from '@/types/dojoSubtopics';
 
 export default function DojoPractice() {
   const [location, setLocation] = useLocation();
 
-  // Extract topic from query params
+  // Extract subtopic from query params
   const params = new URLSearchParams(location.split('?')[1]);
-  const topic = params.get('topic') || 'unknown';
+  const subtopicId = params.get('subtopic');
 
-  // Topic name mapping
+  // Look up subtopic definition
+  const subtopic = subtopicId ? getSubtopicById(subtopicId) : undefined;
+
+  // Fallback to topic param for backward compatibility
+  const topic = params.get('topic');
   const topicNames: Record<string, string> = {
     addition: 'Addition',
     subtraction: 'Subtraktion',
@@ -20,7 +25,9 @@ export default function DojoPractice() {
     sizes: 'Größen',
   };
 
-  const topicName = topicNames[topic] || topic;
+  // Determine display name and description
+  const displayName = subtopic ? subtopic.name : topic ? topicNames[topic] : 'Unbekannt';
+  const displayDescription = subtopic?.description;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-100 via-yellow-100 to-red-100 p-4">
@@ -35,11 +42,14 @@ export default function DojoPractice() {
             ← Zurück zum Dojo
           </Button>
           <h1 className="text-4xl font-bold text-primary mb-2">
-            🥋 {topicName}
+            🥋 {displayName}
           </h1>
-          <p className="text-lg text-muted-foreground">
-            Trainiere in Ruhe
-          </p>
+          {displayDescription && (
+            <p className="text-lg text-muted-foreground">{displayDescription}</p>
+          )}
+          {!displayDescription && (
+            <p className="text-lg text-muted-foreground">Trainiere in Ruhe</p>
+          )}
         </div>
 
         {/* Content Area */}

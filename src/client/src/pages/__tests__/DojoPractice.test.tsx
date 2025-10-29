@@ -78,4 +78,62 @@ describe('DojoPractice', () => {
       unmount();
     });
   });
+
+  // Subtopic tests
+  it('should display subtopic name when subtopic query param is provided', () => {
+    mockLocation = '/dojo/practice?subtopic=multiplication_times_1_5';
+    render(<DojoPractice />);
+
+    expect(screen.getByText(/Einmaleins 1-5/)).toBeInTheDocument();
+  });
+
+  it('should display subtopic description when available', () => {
+    mockLocation = '/dojo/practice?subtopic=addition_up_to_100';
+    render(<DojoPractice />);
+
+    expect(screen.getByText(/Addition mit Zahlen bis 100/)).toBeInTheDocument();
+  });
+
+  it('should display subtopic name for geometry subtopic', () => {
+    mockLocation = '/dojo/practice?subtopic=geometry_shape_recognition';
+    render(<DojoPractice />);
+
+    // The name appears in the title
+    expect(screen.getByRole('heading', { name: /Formen erkennen/ })).toBeInTheDocument();
+    // The description appears as paragraph
+    expect(screen.getByText(/Geometrische Formen erkennen und benennen/)).toBeInTheDocument();
+  });
+
+  it('should display subtopic name for division with remainder', () => {
+    mockLocation = '/dojo/practice?subtopic=division_with_remainder';
+    render(<DojoPractice />);
+
+    expect(screen.getByText(/Mit Rest/)).toBeInTheDocument();
+    expect(screen.getByText(/Division mit Rest/)).toBeInTheDocument();
+  });
+
+  it('should display subtopic name for sizes time', () => {
+    mockLocation = '/dojo/practice?subtopic=sizes_time';
+    render(<DojoPractice />);
+
+    expect(screen.getByText(/Zeit \(min, h\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Zeit ablesen und umrechnen/)).toBeInTheDocument();
+  });
+
+  it('should handle unknown subtopic gracefully', () => {
+    mockLocation = '/dojo/practice?subtopic=unknown_subtopic';
+    render(<DojoPractice />);
+
+    // Should not crash, displays fallback
+    expect(screen.getByText(/Unbekannt/)).toBeInTheDocument();
+  });
+
+  it('should prioritize subtopic param over topic param', () => {
+    mockLocation = '/dojo/practice?topic=addition&subtopic=multiplication_times_1_5';
+    render(<DojoPractice />);
+
+    // Should display subtopic name, not topic name
+    expect(screen.getByText(/Einmaleins 1-5/)).toBeInTheDocument();
+    expect(screen.queryByText(/^Addition$/)).not.toBeInTheDocument();
+  });
 });
