@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, waitFor } from '@testing-library/react';
+import { render, waitFor, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
 import { AppProvider, useApp } from '../AppContext';
 import { db } from '@/lib/db';
 import { createUserProgress, createStylingItems, createCharacterState } from '@/test/fixtures';
+import { initialStylingItems, initialUserProgress } from '@/lib/initialData';
 
 // Mock db
 vi.mock('@/lib/db', () => ({
@@ -14,6 +16,7 @@ vi.mock('@/lib/db', () => ({
     saveStylingItems: vi.fn(),
     saveUserProgress: vi.fn(),
     saveCharacterState: vi.fn(),
+    clearAllData: vi.fn(),
   },
 }));
 
@@ -50,6 +53,29 @@ function TestComponent() {
   );
 }
 
+// Test component for resetGame
+function ResetTestComponent() {
+  const { resetGame, stylingItems, userProgress, characterState } = useApp();
+  const [resetCalled, setResetCalled] = React.useState(false);
+
+  const handleReset = async () => {
+    await resetGame();
+    setResetCalled(true);
+  };
+
+  return (
+    <div>
+      <button onClick={handleReset} data-testid="reset-button">
+        Reset
+      </button>
+      <div data-testid="reset-called">{resetCalled ? 'yes' : 'no'}</div>
+      <div data-testid="items-count">{stylingItems.length}</div>
+      <div data-testid="user-progress-id">{userProgress?.id}</div>
+      <div data-testid="character-items">{characterState.appliedItems.length}</div>
+    </div>
+  );
+}
+
 describe('AppContext', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -60,6 +86,7 @@ describe('AppContext', () => {
     vi.mocked(db.saveStylingItems).mockResolvedValue();
     vi.mocked(db.saveUserProgress).mockResolvedValue();
     vi.mocked(db.saveCharacterState).mockResolvedValue();
+    vi.mocked(db.clearAllData).mockResolvedValue();
   });
 
   it('should initialize database on mount', async () => {
@@ -149,5 +176,101 @@ describe('AppContext', () => {
     }).toThrow('useApp must be used within an AppProvider');
 
     spy.mockRestore();
+  });
+
+  describe('resetGame', () => {
+    it('should clear all data and restore initial state', async () => {
+      const mockItems = createStylingItems(5);
+      const mockProgress = createUserProgress({ totalCorrectAnswers: 10 });
+      const mockCharState = createCharacterState({ appliedItems: [{ itemId: 'test', position: { x: 50, y: 50 }, scale: 1, rotation: 0 }] });
+
+      vi.mocked(db.getAllStylingItems).mockResolvedValue(mockItems);
+      vi.mocked(db.getUserProgress).mockResolvedValue(mockProgress);
+      vi.mocked(db.getCharacterState).mockResolvedValue(mockCharState);
+
+      render(
+        <AppProvider>
+          <ResetTestComponent />
+        </AppProvider>
+      );
+
+      // Wait for initial load
+      await waitFor(() => {
+        expect(screen.getByTestId('items-count').textContent).toBe('5');
+      });
+
+      // Click reset button
+      const resetButton = screen.getByTestId('reset-button');
+      fireEvent.click(resetButton);
+
+      // Wait for reset to complete
+      await waitFor(() => {
+        expect(db.clearAllData).toHaveBeenCalled();
+        expect(db.saveStylingItems).toHaveBeenCalledWith(initialStylingItems);
+        expect(db.saveUserProgress).toHaveBeenCalledWith(initialUserProgress);
+        expect(db.saveCharacterState).toHaveBeenCalledWith({ appliedItems: [] });
+      });
+    });
+
+    it('should refresh state after reset', async () => {
+      const mockItems = createStylingItems(3);
+      vi.mocked(db.getAllStylingItems)
+        .mockResolvedValueOnce(mockItems) // Initial load
+        .mockResolvedValueOnce(initialStylingItems); // After reset
+
+      vi.mocked(db.getUserProgress)
+        .mockResolvedValueOnce(createUserProgress({ totalCorrectAnswers: 5 }))
+        .mockResolvedValueOnce(initialUserProgress);
+
+      vi.mocked(db.getCharacterState)
+        .mockResolvedValueOnce(createCharacterState({ appliedItems: [{ itemId: 'test', position: { x: 50, y: 50 }, scale: 1, rotation: 0 }] }))
+        .mockResolvedValueOnce({ id: 1, appliedItems: [] });
+
+      render(
+        <AppProvider>
+          <ResetTestComponent />
+        </AppProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('items-count').textContent).toBe('3');
+      });
+
+      const resetButton = screen.getByTestId('reset-button');
+      fireEvent.click(resetButton);
+
+      await waitFor(() => {
+        expect(db.getAllStylingItems).toHaveBeenCalledTimes(2); // Initial + refresh
+        expect(db.getUserProgress).toHaveBeenCalledTimes(2); // Initial + refresh
+      });
+    });
+
+    it('should handle errors during reset', async () => {
+      vi.mocked(db.clearAllData).mockRejectedValue(new Error('Reset failed'));
+
+      render(
+        <AppProvider>
+          <ResetTestComponent />
+        </AppProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('reset-button')).toBeInTheDocument();
+      });
+
+      const resetButton = screen.getByTestId('reset-button');
+      
+      // Suppress console.error for this test
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await expect(async () => {
+        fireEvent.click(resetButton);
+        await waitFor(() => {
+          expect(screen.getByTestId('reset-called').textContent).toBe('yes');
+        });
+      }).rejects.toThrow();
+
+      consoleSpy.mockRestore();
+    });
   });
 });

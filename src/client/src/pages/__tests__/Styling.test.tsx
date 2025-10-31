@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import Styling from '../Styling';
 import { createUserProgress, createInitialTestItems, createCharacterState } from '@/test/fixtures';
 
@@ -10,6 +11,7 @@ vi.mock('wouter', () => ({
 
 // Create mock function outside to access in tests
 const mockRefreshUserProgress = vi.fn();
+const mockResetGame = vi.fn();
 
 vi.mock('@/contexts/AppContext', () => ({
   useApp: () => ({
@@ -18,6 +20,7 @@ vi.mock('@/contexts/AppContext', () => ({
     characterState: createCharacterState(),
     updateCharacterState: vi.fn(),
     refreshUserProgress: mockRefreshUserProgress,
+    resetGame: mockResetGame,
     isLoading: false, // DB is initialized
   }),
 }));
@@ -26,6 +29,8 @@ describe('Styling', () => {
   beforeEach(() => {
     // Clear mock calls between tests
     mockRefreshUserProgress.mockClear();
+    mockResetGame.mockClear();
+    mockResetGame.mockResolvedValue(undefined);
   });
 
   it('should call refreshUserProgress on mount', () => {
@@ -98,5 +103,96 @@ describe('Styling', () => {
     render(<Styling />);
 
     expect(screen.getByText(/Löse Matheaufgaben/)).toBeInTheDocument();
+  });
+
+  describe('Reset Game', () => {
+    it('should render reset button in statistics section', () => {
+      render(<Styling />);
+
+      expect(screen.getByText('Spiel zurücksetzen')).toBeInTheDocument();
+    });
+
+    it('should open confirmation dialog when reset button is clicked', async () => {
+      const user = userEvent.setup();
+      render(<Styling />);
+
+      const resetButton = screen.getByText('Spiel zurücksetzen');
+      await user.click(resetButton);
+
+      expect(screen.getByText('Spiel zurücksetzen?')).toBeInTheDocument();
+      expect(screen.getByText(/Warnung: Alle Fortschritte gehen verloren!/)).toBeInTheDocument();
+    });
+
+    it('should show warning message in dialog', async () => {
+      const user = userEvent.setup();
+      render(<Styling />);
+
+      const resetButton = screen.getByText('Spiel zurücksetzen');
+      await user.click(resetButton);
+
+      expect(screen.getByText(/Dies löscht:/)).toBeInTheDocument();
+      expect(screen.getByText(/Alle freigeschalteten Items/)).toBeInTheDocument();
+      expect(screen.getByText(/Deinen gesamten Fortschritt/)).toBeInTheDocument();
+      expect(screen.getByText(/Deine Charakter-Gestaltung/)).toBeInTheDocument();
+      expect(screen.getByText(/Möchtest du wirklich neu anfangen?/)).toBeInTheDocument();
+    });
+
+    it('should call resetGame when confirmed', async () => {
+      const user = userEvent.setup();
+      render(<Styling />);
+
+      const resetButton = screen.getByText('Spiel zurücksetzen');
+      await user.click(resetButton);
+
+      const confirmButton = screen.getByText('Zurücksetzen');
+      await user.click(confirmButton);
+
+      await waitFor(() => {
+        expect(mockResetGame).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it('should not call resetGame when cancelled', async () => {
+      const user = userEvent.setup();
+      render(<Styling />);
+
+      const resetButton = screen.getByText('Spiel zurücksetzen');
+      await user.click(resetButton);
+
+      const cancelButton = screen.getByText('Abbrechen');
+      await user.click(cancelButton);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Spiel zurücksetzen?')).not.toBeInTheDocument();
+      });
+
+      expect(mockResetGame).not.toHaveBeenCalled();
+    });
+
+    it('should show loading state during reset', async () => {
+      const user = userEvent.setup();
+      let resolveReset: () => void;
+      const resetPromise = new Promise<void>((resolve) => {
+        resolveReset = resolve;
+      });
+      mockResetGame.mockReturnValue(resetPromise);
+
+      render(<Styling />);
+
+      const resetButton = screen.getByText('Spiel zurücksetzen');
+      await user.click(resetButton);
+
+      const confirmButton = screen.getByText('Zurücksetzen');
+      await user.click(confirmButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Zurücksetzen...')).toBeInTheDocument();
+      });
+
+      resolveReset!();
+      await waitFor(() => {
+        expect(screen.queryByText('Zurücksetzen...')).not.toBeInTheDocument();
+      });
+    });
   });
 });

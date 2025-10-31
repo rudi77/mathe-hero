@@ -7,13 +7,26 @@ import type { StylingItem, AppliedStyling } from '@/types/models';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 export default function Styling() {
   const [location, setLocation] = useLocation();
-  const { stylingItems, characterState, updateCharacterState, userProgress, refreshUserProgress, isLoading } = useApp();
+  const { stylingItems, characterState, updateCharacterState, userProgress, refreshUserProgress, isLoading, resetGame } = useApp();
   
   const [selectedItem, setSelectedItem] = useState<StylingItem | null>(null);
   const [backgroundColor, setBackgroundColor] = useState('#FFE4E1');
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   // Refresh user progress whenever we navigate to this page
   // Location change triggers this effect, ensuring fresh data after returning from MathTask
@@ -57,6 +70,20 @@ export default function Styling() {
   const handleClearAll = () => {
     updateCharacterState({ appliedItems: [] });
     setBackgroundColor('#FFE4E1');
+  };
+
+  const handleResetGame = async () => {
+    setIsResetting(true);
+    try {
+      await resetGame();
+      setBackgroundColor('#FFE4E1');
+      setResetDialogOpen(false);
+    } catch (error) {
+      console.error('Failed to reset game:', error);
+      alert('Fehler beim Zurücksetzen des Spiels. Bitte versuche es erneut.');
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   const unlockedItems = stylingItems.filter(item => item.isUnlocked);
@@ -133,7 +160,52 @@ export default function Styling() {
             {/* Stats */}
             {userProgress && (
               <Card className="mt-4 p-4 bg-white/80 backdrop-blur">
-                <h3 className="font-semibold mb-3">Deine Statistik</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold">Deine Statistik</h3>
+                  <AlertDialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-muted-foreground hover:text-destructive"
+                        disabled={isResetting}
+                      >
+                        Spiel zurücksetzen
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Spiel zurücksetzen?</AlertDialogTitle>
+                        <AlertDialogDescription className="space-y-2 pt-2">
+                          <div className="font-semibold text-destructive">
+                            ⚠️ Warnung: Alle Fortschritte gehen verloren!
+                          </div>
+                          <div className="pt-2">
+                            Dies löscht:
+                          </div>
+                          <ul className="list-disc list-inside space-y-1 text-left pl-2">
+                            <li>Alle freigeschalteten Items</li>
+                            <li>Deinen gesamten Fortschritt</li>
+                            <li>Deine Charakter-Gestaltung</li>
+                          </ul>
+                          <div className="pt-2">
+                            Möchtest du wirklich neu anfangen?
+                          </div>
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isResetting}>Abbrechen</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleResetGame}
+                          disabled={isResetting}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          {isResetting ? 'Zurücksetzen...' : 'Zurücksetzen'}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
                     <div className="text-2xl font-bold text-green-600">

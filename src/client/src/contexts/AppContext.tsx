@@ -14,6 +14,7 @@ interface AppContextType {
   updateCharacterState: (state: CharacterState) => Promise<void>;
   getDifficultyForTopic: (topic: MathTopic) => number;
   setDifficultyForTopic: (topic: MathTopic, difficulty: number) => Promise<void>;
+  resetGame: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -140,6 +141,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await updateUserProgress({ [topicMap[topic as Exclude<MathTopic, 'mixed'>]]: difficulty });
   };
 
+  const resetGame = async () => {
+    try {
+      // Clear all IndexedDB stores
+      await db.clearAllData();
+      
+      // Restore initial styling items
+      await db.saveStylingItems(initialStylingItems);
+      
+      // Restore initial user progress
+      await db.saveUserProgress(initialUserProgress);
+      
+      // Clear character state
+      const emptyCharacterState: CharacterState = { appliedItems: [] };
+      await db.saveCharacterState(emptyCharacterState);
+      
+      // Refresh state to reflect reset
+      await refreshStylingItems();
+      await refreshUserProgress();
+      setCharacterState(emptyCharacterState);
+    } catch (error) {
+      console.error('Failed to reset game:', error);
+      throw new Error('Fehler beim Zurücksetzen des Spiels. Bitte versuche es erneut.');
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -153,6 +179,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         updateCharacterState,
         getDifficultyForTopic,
         setDifficultyForTopic,
+        resetGame,
       }}
     >
       {children}
