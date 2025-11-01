@@ -29,7 +29,9 @@
       "Bash(pnpm dev)",
       "Bash(dir:*)",
       "Bash(pnpm exec eslint:*)",
-      "Bash(pnpm build:*)"
+      "Bash(pnpm build:*)",
+      "Bash(pnpm exec cap init:*)",
+      "Bash(pnpm exec cap:*)"
     ],
     "deny": [],
     "ask": []

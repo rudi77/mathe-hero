@@ -1,0 +1,13 @@
+{
+  "appId": "com.mathehero.app",
+  "appName": "Mathe-Stylistin",
+  "webDir": "src/dist/public",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  }
+}

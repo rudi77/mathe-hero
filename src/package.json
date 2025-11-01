@@ -13,7 +13,11 @@
     "test": "cross-env NODE_OPTIONS='--max-old-space-size=4096' vitest",
     "test:ui": "cross-env NODE_OPTIONS='--max-old-space-size=4096' vitest --ui",
     "test:coverage": "cross-env NODE_OPTIONS='--max-old-space-size=4096' vitest --coverage",
-    "prepare": "cd .. && husky || true"
+    "prepare": "cd .. && husky || true",
+    "cap:sync": "cd .. && cap sync",
+    "cap:open:android": "cd .. && cap open android",
+    "android:build": "vite build && cd .. && cap sync && cap copy android",
+    "android:open": "pnpm android:build && pnpm cap:open:android"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Mathe-Stylistin</string>
+    <string name="title_activity_main">Mathe-Stylistin</string>
+    <string name="package_name">com.mathehero.app</string>
+    <string name="custom_url_scheme">com.mathehero.app</string>
+</resources>
